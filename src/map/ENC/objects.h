@@ -67,6 +67,7 @@
 #define PONTON 95
 #define PRCARE 96
 #define PYLONS 98
+#define RADRFL 101
 #define RADSTA 102
 #define RTPBCN 103
 #define RDOCAL 104
@@ -74,6 +75,7 @@
 #define RAILWY 106
 #define RCRTCL 108
 #define RECTRC 109
+#define RCTLPT 110
 #define RSCSTA 111
 #define RESARE 112
 #define RIVERS 114

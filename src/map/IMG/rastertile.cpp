@@ -152,7 +152,7 @@ void RasterTile::drawPolygons(QPainter *painter,
 				bool insert = false;
 				SubFile::Handle *hdl = hc.object(poly.raster.lbl());
 				if (!hdl) {
-					hdl = new SubFile::Handle(_file, poly.raster.lbl());
+					hdl = new SubFile::Handle(poly.raster.lbl(), _file);
 					insert = true;
 				}
 				QPixmap pm(poly.raster.lbl()->image(*hdl, poly.raster.id()));
@@ -445,7 +445,11 @@ void RasterTile::fetchData(QList<MapData::Poly> &polygons,
 
 	if (dynamic_cast<IMGData*>(_data)) {
 		_file = new QFile(_data->fileName());
-		_file->open(QIODevice::ReadOnly | QIODevice::Unbuffered);
+		if (!_file->open(QIODevice::ReadOnly | QIODevice::Unbuffered)) {
+			qWarning("%s: %s", qPrintable(_file->fileName()),
+			  qPrintable(_file->errorString()));
+			return;
+		}
 	}
 
 	QRectF polyRect(ttl, QPointF(ttl.x() + _rect.width(), ttl.y()

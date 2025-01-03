@@ -63,16 +63,17 @@ static QMap<uint,uint> orderMapInit()
 	map.insert(TYPE(PILPNT), 34);
 	map.insert(TYPE(ACHBRT), 35);
 	map.insert(TYPE(I_ACHBRT), 35);
-	map.insert(TYPE(CRANES), 36);
-	map.insert(TYPE(I_CRANES), 36);
-	map.insert(TYPE(I_WTWGAG), 37);
-	map.insert(TYPE(PYLONS), 38);
-	map.insert(TYPE(SLCONS), 39);
-	map.insert(TYPE(LNDMRK), 40);
-	map.insert(TYPE(SILTNK), 41);
-	map.insert(TYPE(LNDELV), 42);
-	map.insert(TYPE(SMCFAC), 43);
-	map.insert(TYPE(BUISGL), 44);
+	map.insert(TYPE(RADRFL), 36);
+	map.insert(TYPE(CRANES), 37);
+	map.insert(TYPE(I_CRANES), 37);
+	map.insert(TYPE(I_WTWGAG), 38);
+	map.insert(TYPE(PYLONS), 39);
+	map.insert(TYPE(SLCONS), 40);
+	map.insert(TYPE(LNDMRK), 41);
+	map.insert(TYPE(SILTNK), 42);
+	map.insert(TYPE(LNDELV), 43);
+	map.insert(TYPE(SMCFAC), 44);
+	map.insert(TYPE(BUISGL), 45);
 
 	map.insert(TYPE(I_DISMAR), 0xFFFFFFFE);
 	map.insert(TYPE(SOUNDG), 0xFFFFFFFF);
@@ -166,6 +167,26 @@ static bool polygonCb(const MapData::Poly *polygon, void *context)
 {
 	QList<MapData::Poly> *polygons = (QList<MapData::Poly>*)context;
 	polygons->append(*polygon);
+	return true;
+}
+
+static bool polygonPointCb(const MapData::Poly *polygon, void *context)
+{
+	QList<MapData::Point> *points = (QList<MapData::Point>*)context;
+	uint baseType = polygon->type()>>16;
+
+	if (!polygon->label().isEmpty() || baseType == TSSLPT || baseType == RCTLPT
+	  || baseType == I_TRNBSN
+	  || polygon->type() == SUBTYPE(ACHARE, 2)
+	  || polygon->type() == SUBTYPE(ACHARE, 3)
+	  || polygon->type() == SUBTYPE(ACHARE, 9)
+	  || polygon->type() == SUBTYPE(I_ACHARE, 2)
+	  || polygon->type() == SUBTYPE(I_ACHARE, 3)
+	  || polygon->type() == SUBTYPE(I_ACHARE, 9)
+	  || polygon->type() == SUBTYPE(I_BERTHS, 6))
+		points->append(MapData::Point(polygon->type(), polygon->bounds().center(),
+		  polygon->label(), polygon->param()));
+
 	return true;
 }
 
@@ -285,7 +306,14 @@ MapData::Point::Point(uint type, const Coordinates &c, const QString &label,
 		else
 			_label += "\n(" + QString::fromLatin1(params.at(0))
 			  + "\xE2\x80\x89m)";
-	}
+	} else if ((type == TYPE(TSSLPT) || type == TYPE(RCTLPT)) && params.size())
+		_param = QVariant(params.at(0).toDouble());
+}
+
+MapData::Point::Point(uint type, const Coordinates &c, const QString &label,
+  const QVariant &param) : _type(type), _pos(c), _label(label), _param(param)
+{
+	_id = ((quint64)order(type))<<32 | (uint)qHash(c);
 }
 
 MapData::Poly::Poly(uint type, const Polygon &path, const QString &label,
@@ -293,7 +321,7 @@ MapData::Poly::Poly(uint type, const Polygon &path, const QString &label,
 {
 	if (type == TYPE(DEPARE) && params.size())
 		_type = SUBTYPE(DEPARE, depthLevel(params.at(0)));
-	else if (type == TYPE(TSSLPT) && params.size())
+	else if ((type == TYPE(TSSLPT) || type == TYPE(RCTLPT)) && params.size())
 		_param = QVariant(params.at(0).toDouble());
 	else if ((type == TYPE(BRIDGE) || type == TYPE(I_BRIDGE))
 	  && params.size()) {
@@ -302,7 +330,8 @@ MapData::Poly::Poly(uint type, const Polygon &path, const QString &label,
 			_label = QString::fromUtf8("\xE2\x86\x95") + UNIT_SPACE
 			  + QString::number(clr) + UNIT_SPACE + hUnits(HUNI);
 		}
-	} else if (type>>16 == LNDARE || type>>16 == SEAARE)
+	} else if (type>>16 == LNDARE || type>>16 == SEAARE || type>>16 == BERTHS
+	  || type>>16 == I_BERTHS || type>>16 == BUAARE)
 		_label = label;
 }
 
@@ -595,7 +624,9 @@ MapData::Attr MapData::pointAttr(const ISO8211::Record &r, uint OBJL)
 		  || (OBJL == RDOCAL && key == ORIENT)
 		  || (OBJL == I_RDOCAL && key == ORIENT)
 		  || (OBJL == CURENT && key == ORIENT)
-		  || (OBJL == LNDELV && key == ELEVAT))
+		  || (OBJL == LNDELV && key == ELEVAT)
+		  || (OBJL == TSSLPT && key == ORIENT)
+		  || (OBJL == RCTLPT && key == ORIENT))
 			params[0] = av.at(1).toByteArray();
 		if ((OBJL == I_RDOCAL && key == COMCHA)
 		  || (OBJL == RDOCAL && key == COMCHA)
@@ -668,6 +699,7 @@ MapData::Attr MapData::polyAttr(const ISO8211::Record &r, uint OBJL)
 		}
 
 		if ((OBJL == TSSLPT && key == ORIENT)
+		  || (OBJL == RCTLPT && key == ORIENT)
 		  || (OBJL == DEPARE && key == DRVAL1))
 			params[0] = av.at(1).toByteArray();
 		if ((OBJL == BRIDGE && key == VERCLR)
@@ -842,6 +874,7 @@ void MapData::points(const RectC &rect, QList<Point> *points) const
 
 	rectcBounds(rect, min, max);
 	_points.Search(min, max, pointCb, points);
+	_areas.Search(min, max, polygonPointCb, points);
 }
 
 void MapData::lines(const RectC &rect, QList<Line> *lines) const
