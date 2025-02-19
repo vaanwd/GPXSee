@@ -323,6 +323,8 @@ void Style::defaultPolygonStyle()
 	  Qt::FDiagPattern));
 	_polygons[0x10503] = Polygon(QBrush(QColor(0xff, 0x40, 0x40),
 	  Qt::FDiagPattern));
+	_polygons[0x10504] = Polygon(QBrush(QColor(0xff, 0x40, 0x40),
+	  Qt::FDiagPattern));
 	_polygons[0x10601] = Polygon(QBrush(QColor(0xaa, 0xaa, 0xaa)));
 	_polygons[0x1060a] = Polygon(QBrush(QColor(0xfc, 0xb4, 0xfc)));
 	_polygons[0x10614] = Polygon(QBrush(QColor(0xff, 0xff, 0xff)));
@@ -348,7 +350,8 @@ void Style::defaultPolygonStyle()
 	  << TYPE(0x0a) << 0x10907 << TYPE(0x0b) << 0x10908 << TYPE(0x0c) << 0x10909
 	  << TYPE(0x26) << TYPE(0x0d) << 0x1090a << TYPE(0x0e) << 0x1090b << TYPE(0x0f)
 	  << TYPE(0x10) << TYPE(0x11) << TYPE(0x12) << TYPE(0x19) << 0x1090d
-	  << TYPE(0x13) << 0x10900 << 0x10613 << 0x10409 << 0x10503 << 0x1060a;
+	  << TYPE(0x13) << 0x10900 << 0x10613 << 0x10409 << 0x10503 << 0x10504
+	  << 0x1060a;
 }
 
 void Style::defaultLineStyle(qreal ratio)
@@ -464,7 +467,9 @@ void Style::defaultLineStyle(qreal ratio)
 	_lines[0x10409] = Line(QPen(QColor(0, 0, 0), 1, Qt::DotLine));
 	_lines[0x10501] = Line(QImage(":/marine/noanchor-line.png"));
 	_lines[0x10503] = Line(QPen(QColor(0xe7, 0x28, 0xe7), 1, Qt::DashLine));
+	_lines[0x10504] = Line(QPen(QColor(0xe7, 0x28, 0xe7), 1, Qt::DashLine));
 	_lines[0x10505] = Line(QImage(":/marine/safety-zone-line.png"));
+	_lines[0x10506] = Line(QImage(":/marine/nature-reserve-line.png"));
 	_lines[0x10507] = Line(QPen(QColor(0xe7, 0x28, 0xe7), 1, Qt::DashLine));
 	_lines[0x10601] = Line(QPen(QColor(0, 0, 0), 1, Qt::SolidLine));
 	_lines[0x10603] = Line(QPen(QColor(0xe7, 0x28, 0xe7), 2, Qt::DashDotLine));
@@ -1377,34 +1382,34 @@ const QFont *Style::font(Style::FontSize size, Style::FontSize defaultSize) cons
 	}
 }
 
-const QImage *Style::light(Lights::Color color) const
+const QImage *Style::light(Light::Color color) const
 {
 	switch (color) {
-		case Lights::Red:
+		case Light::Red:
 			return &_lightRed;
-		case Lights::Green:
+		case Light::Green:
 			return &_lightGreen;
-		case Lights::White:
+		case Light::White:
 			return &_lightWhite;
-		case Lights::Yellow:
-		case Lights::Amber:
+		case Light::Yellow:
+		case Light::Amber:
 			return &_lightYellow;
 		default:
 			return &_light;
 	}
 }
 
-QColor Style::color(Lights::Color c)
+QColor Style::color(Light::Color c)
 {
 	switch (c) {
-		case Lights::Red:
+		case Light::Red:
 			return Qt::red;
-		case Lights::Green:
+		case Light::Green:
 			return Qt::green;
-		case Lights::White:
+		case Light::White:
 			return Qt::white;
-		case Lights::Yellow:
-		case Lights::Amber:
+		case Light::Yellow:
+		case Light::Amber:
 			return Qt::yellow;
 		default:
 			return Qt::magenta;
