@@ -9,7 +9,6 @@
 #include "style.h"
 
 class QPainter;
-class IMGMap;
 class TextItem;
 
 namespace IMG {
@@ -32,23 +31,30 @@ public:
 	void render();
 
 private:
-	typedef RTree<const MapData::Elevation*, double, 2> DEMTRee;
-
-	struct ElevationCTX
+	struct Sector
 	{
-		ElevationCTX(const DEMTRee &tree, const Coordinates &c, double &ele)
-		  : tree(tree), c(c), ele(ele) {}
+		Sector(Light::Color color, quint32 start, quint32 end)
+		  : color(color), start(start), end(end) {}
 
-		const DEMTRee &tree;
-		const Coordinates &c;
-		double &ele;
-	};
-	struct EdgeCTX
-	{
-		EdgeCTX(const Coordinates &c, double &ele) : c(c), ele(ele) {}
+		bool operator==(const Sector &other) const
+		{
+			return (color == other.color && start == other.start
+			  && end == other.end);
+		}
+		bool operator<(const Sector &other) const
+		{
+			if (color == other.color) {
+				if (start == other.start)
+					return end < other.end;
+				else
+					return start < other.start;
+			} else
+				return color < other.color;
+		}
 
-		const Coordinates &c;
-		double &ele;
+		Light::Color color;
+		quint32 start;
+		quint32 end;
 	};
 
 	void fetchData(QList<MapData::Poly> &polygons, QList<MapData::Poly> &lines,
@@ -60,18 +66,22 @@ private:
 	void ll2xy(QList<MapData::Poly> &polys) const;
 	void ll2xy(QList<MapData::Point> &points) const;
 
-	void drawPolygons(QPainter *painter, const QList<MapData::Poly> &polygons) const;
+	void drawPolygons(QPainter *painter,
+	  const QList<MapData::Poly> &polygons) const;
 	void drawLines(QPainter *painter, const QList<MapData::Poly> &lines) const;
-	void drawTextItems(QPainter *painter, const QList<TextItem*> &textItems) const;
+	void drawTextItems(QPainter *painter,
+	  const QList<TextItem*> &textItems) const;
 	void drawHillShading(QPainter *painter) const;
-	void drawSectorLights(QPainter *painter, const QList<const MapData::Point*> &lights) const;
+	void drawSectorLights(QPainter *painter,
+	  const QList<const MapData::Point*> &lights) const;
 
 	void processPolygons(const QList<MapData::Poly> &polygons,
-	  QList<TextItem *> &textItems);
+	  QList<TextItem*> &textItems);
 	void processLines(QList<MapData::Poly> &lines, QList<TextItem*> &textItems,
 	  const QImage (&arrows)[2]);
-	void processPoints(QList<MapData::Point> &points, QList<TextItem*> &textItems,
-	  QList<const MapData::Point *> &lights);
+	void processPoints(QList<MapData::Point> &points,
+	  QList<TextItem*> &textItems, QList<TextItem*> &lights,
+	  QList<const MapData::Point*> &sectorLights);
 	void processShields(const QList<MapData::Poly> &lines,
 	  QList<TextItem*> &textItems);
 	void processStreetNames(const QList<MapData::Poly> &lines,
