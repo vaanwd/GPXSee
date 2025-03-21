@@ -3,7 +3,7 @@ unix:!macx:!android {
 } else {
     TARGET = GPXSee
 }
-VERSION = 13.37
+VERSION = 13.38
 
 QT += core \
     gui \
@@ -118,6 +118,7 @@ HEADERS += src/common/config.h \
     src/data/style.h \
     src/data/twonavparser.h \
     src/data/txtparser.h \
+    src/data/vtkparser.h \
     src/map/ENC/data.h \
     src/map/IMG/light.h \
     src/map/downloader.h \
@@ -346,6 +347,7 @@ SOURCES += src/main.cpp \
     src/GUI/projectioncombobox.cpp \
     src/GUI/passwordedit.cpp \
     src/data/txtparser.cpp \
+    src/data/vtkparser.cpp \
     src/map/downloader.cpp \
     src/map/demloader.cpp \
     src/map/ENC/atlasdata.cpp \
@@ -561,7 +563,8 @@ win32 {
         icons/formats/trk.ico \
         icons/formats/gemf.ico \
         icons/formats/000.ico \
-        icons/formats/031.ico
+        icons/formats/031.ico \
+        icons/formats/vtk.ico
     DEFINES += _USE_MATH_DEFINES \
         NOGDI
 }
